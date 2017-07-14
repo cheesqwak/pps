@@ -11,24 +11,25 @@ TCP_REVERSE = dict((TCP_SERVICES[k], k) for k in TCP_SERVICES.keys())
 UDP_REVERSE = dict((UDP_SERVICES[k], k) for k in UDP_SERVICES.keys())
 
 def host_port_digest(x):
-    str_src_port = str(x.sport)
-    str_dst_port = str(x.dport)
+    tcp_struct = [str(x.sport), "tcp"]
+    udp_struct = [str(x.dport), "udp"]
+    transports = [tcp_struct, udp_struct]
+    ips = [x['IP'].src, x['IP'].dst]
 
-    #Verification que l'IP n'existe pas, auquel cas on la cree avec son premier tuple (port,ip) 
+    #Verification que l'IP n'existe pas, auquel cas on la cree avec son premier tuple (port,type) 
+    tcp_udp_bool = 1;
     if x.haslayer(TCP):
-        if x['IP'].src not in ips_ports :
-            ips_ports[x['IP'].src] = [(str_src_port,"tcp")]
-        else :
-        #Verification que le tuple (port,type) n'existe pas dans la case de clef "IP source"
-            if str_src_port not in ips_ports[x['IP'].src][0] :
-                ips_ports[x['IP'].src].append((str_src_port,"tcp"))
-
-    if x.haslayer(UDP):
-        if x['IP'].dst not in ips_ports :
-            ips_ports[x['IP'].dst] = [(str_dst_port,"udp")]
-        else:
-            if str_dst_port not in ips_ports[x['IP'].dst][0]:
-                ips_ports[x['IP'].dst].append((str_dst_port,"udp"))
+        tcp_udp_bool = 0
+    if ips[tcp_udp_bool] not in ips_ports :
+        ips_ports[ips[tcp_udp_bool]] = [(transports[tcp_udp_bool][0],transports[tcp_udp_bool][1])]
+    else :
+    #Verification que le tuple (port,type) n'existe pas dans la case de clef "IP source"
+        a = False
+        for ip_port in ips_ports[ips[tcp_udp_bool]] :
+            if transports[tcp_udp_bool][0] == ip_port[0] :
+                a = True
+        if not a :
+            ips_ports[ips[tcp_udp_bool]].append((transports[tcp_udp_bool][0],transports[tcp_udp_bool][1]))
 
 
 def scan(x):
